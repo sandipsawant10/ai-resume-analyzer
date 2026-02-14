@@ -4,8 +4,7 @@ import resumeRoutes from "./src/routes/resume.route.js"
 const app = express()
 
 app.use(express.json())
-app.use("/api/resume", resumeRoutes)
-
+app.use("/resume", resumeRoutes)
 const PORT = process.env.PORT || 5000
 
 app.get('/', (req,res) => {
