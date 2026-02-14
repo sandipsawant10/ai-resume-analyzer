@@ -1,5 +1,5 @@
 import { Router } from "express";
-import upload from "../utils/multer.js";
+import upload from "../middleware/multer.js";
 import { uploadResume } from "../controllers/resume.controller.js";
 
 

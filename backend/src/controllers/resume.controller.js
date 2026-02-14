@@ -1,25 +1,45 @@
+import cloudinary from "../config/cloudinary.js";
 import { analyzeResumeWithAI } from "../utils/aiClient.js";
 import { extractTextFromPDF } from "../utils/pdfReader.js";
 
-const uploadResume = async (req, res) => {
+const uploadResume = async (request, response) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
+    if (!request.file) {
+      return response.status(400).json({ error: "No file uploaded" });
     }
-    const filePath = req.file.path;
-    const text = await extractTextFromPDF(filePath);
+
+    // convert buffer → base64
+    const base64File = request.file.buffer.toString("base64");
+
+    const dataUri = `data:${request.file.mimetype};base64,${base64File}`;
+
+    // upload to cloudinary
+    const uploadedFile = await cloudinary.uploader.upload(dataUri, {
+      folder: "resumes",
+      resource_type: "auto",
+    });
+
+    const fileUrl = uploadedFile.secure_url;
+
+    // extract text from buffer instead of path
+    const text = await extractTextFromPDF(request.file.buffer);
 
     if (!text || text.trim().length === 0) {
-      return res.status(400).json({ error: "Could not extract text from PDF" });
+      return response
+        .status(400)
+        .json({ error: "Could not extract text from PDF" });
     }
 
     const analysis = await analyzeResumeWithAI(text);
-    res.status(200).json({
+
+    response.status(200).json({
       message: "Analysis complete",
+      fileUrl: fileUrl,
       aiAnalysis: analysis,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    response.status(500).json({ error: error.message });
   }
 };
 
