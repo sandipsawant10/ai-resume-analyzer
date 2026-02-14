@@ -1,12 +1,13 @@
 import fs from "fs";
-import pdf from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 
 export const extractTextFromPDF = async (filePath) => {
   try {
     const dataBuffer = fs.readFileSync(filePath);
-    const data = await pdf(dataBuffer);
-    return data.text;
+    const parsedPdf = new PDFParse({ data: dataBuffer });
+    const result = await parsedPdf.getText();
+    return result.text;
   } catch (error) {
-    throw new Error("Failed to extract text")
+    throw new Error(`Failed to extract text: ${error.message}`);
   }
 };
