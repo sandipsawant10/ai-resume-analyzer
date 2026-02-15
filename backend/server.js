@@ -1,14 +1,11 @@
-import express from 'express'
-import resumeRoutes from "./src/routes/resume.route.js"
+import app from "./app.js";
+import connectDB from "./src/db/index.js";
 
-const app = express()
+const PORT = 5000;
 
-app.use(express.json())
-app.use("/resume", resumeRoutes)
-
-const PORT = process.env.PORT || 5000
-
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`)
-})
+(async () => {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`app running on ${PORT}`);
+  });
+})();
