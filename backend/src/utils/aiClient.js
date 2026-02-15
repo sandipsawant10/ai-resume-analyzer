@@ -27,7 +27,7 @@ const analyzeResumeWithAI = async (text) => {
       },
     );
     const data = await response.json();
-    return data.choices[0].message.content;
+    return data?.choices[0].message.content;
   } catch (error) {
     throw new Error("Failed to analyze resume with AI");
   }

@@ -3,23 +3,23 @@ import { analyzeResumeWithAI } from "../utils/aiClient.js";
 import { extractTextFromPDF } from "../utils/pdfReader.js";
 import { Resume } from "../models/resume.model.js";
 
+const uploadResumeFile = async (file) => {
+  const base64File = file.buffer.toString("base64");
+  const dataUri = `data:${file.mimetype};base64,${base64File}`;
+
+  return cloudinary.uploader.upload(dataUri, {
+    folder: "resumes",
+    resource_type: "auto",
+  });
+};
+
 const uploadResume = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    const base64File = req.file.buffer.toString("base64");
-    const dataUri = `data:${req.file.mimetype};base64,${base64File}`;
-
-    const uploadedFile = await cloudinary.uploader.upload(dataUri, {
-      folder: "resumes",
-      resource_type: "auto",
-    });
+    const uploadedFile = await uploadResumeFile(req.file);
 
     const fileUrl = uploadedFile.secure_url;
 
@@ -37,6 +37,7 @@ const uploadResume = async (req, res) => {
       originalName: req.file.originalname,
       mimeType: req.file.mimetype,
       size: req.file.size,
+      analysis,
     });
 
     res.status(200).json({
@@ -53,10 +54,6 @@ const uploadResume = async (req, res) => {
 
 const getMyResumes = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     const resumes = await Resume.find({ user: req.user._id })
       .select("-__v")
       .sort({ createdAt: -1 });
@@ -70,10 +67,6 @@ const getMyResumes = async (req, res) => {
 
 const deleteResume = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     const resume = await Resume.findOne({
       _id: req.params.id,
       user: req.user._id,
@@ -86,17 +79,17 @@ const deleteResume = async (req, res) => {
     await cloudinary.uploader.destroy(resume.publicId, {
       resource_type: "auto",
     });
+    await resume.remove();
+
+    res.status(200).json({ message: "Resume deleted successfully" });
   } catch (error) {
-    console.error(error);
+    console.error(error); 
     res.status(500).json({ error: "Server error" });
   }
 };
 
 const updateResume = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
@@ -110,13 +103,7 @@ const updateResume = async (req, res) => {
       return res.status(404).json({ error: "Resume not found" });
     }
 
-    const base64File = req.file.buffer.toString("base64");
-    const dataUri = `data:${req.file.mimetype};base64,${base64File}`;
-
-    const uploadedFile = await cloudinary.uploader.upload(dataUri, {
-      folder: "resumes",
-      resource_type: "auto",
-    });
+    const uploadedFile = await uploadResumeFile(req.file);
 
     const text = await extractTextFromPDF(req.file.buffer);
     if (!text || text.trim().length === 0) {
@@ -134,6 +121,7 @@ const updateResume = async (req, res) => {
     resume.originalName = req.file.originalname;
     resume.mimeType = req.file.mimetype;
     resume.size = req.file.size;
+    resume.analysis = analysis;
 
     await resume.save();
 

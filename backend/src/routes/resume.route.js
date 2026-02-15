@@ -13,6 +13,6 @@ const router = Router();
 router.route("/upload").post(verifyJWT, upload.single("resume"), uploadResume);
 router.route("/my").get(verifyJWT, getMyResumes);
 router.route("/my/:id").delete(verifyJWT, deleteResume);
-router.route("/my/:id").put(verifyJWT, updateResume);
+router.route("/my/:id").put(verifyJWT, upload.single("resume"), updateResume);
 
 export default router;
