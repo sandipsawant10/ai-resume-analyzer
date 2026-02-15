@@ -1,10 +1,18 @@
 import { Router } from "express";
 import upload from "../middleware/multer.js";
-import { uploadResume } from "../controllers/resume.controller.js";
-
+import {
+  uploadResume,
+  getMyResumes,
+  deleteResume,
+  updateResume,
+} from "../controllers/resume.controller.js";
+import { verifyJWT } from "../middleware/jwt.middleware.js";
 
 const router = Router();
 
-router.route("/upload").post(upload.single("resume"), uploadResume)
+router.route("/upload").post(verifyJWT, upload.single("resume"), uploadResume);
+router.route("/my").get(verifyJWT, getMyResumes);
+router.route("/my/:id").delete(verifyJWT, deleteResume);
+router.route("/my/:id").put(verifyJWT, updateResume);
 
 export default router;
