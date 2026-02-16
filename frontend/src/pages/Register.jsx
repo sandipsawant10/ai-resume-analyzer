@@ -37,18 +37,21 @@ export default function Register() {
           value={email}
           required
           onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
         />
         <input
           type="password"
           value={password}
           required
           onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
         />
         <input
           type="password"
           value={confirmPassword}
           required
           onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirm Password"
         />
         <button type="submit">Submit</button>
       </form>

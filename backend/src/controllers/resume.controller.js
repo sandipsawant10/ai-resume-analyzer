@@ -9,7 +9,7 @@ const uploadResumeFile = async (file) => {
 
   return cloudinary.uploader.upload(dataUri, {
     folder: "resumes",
-    resource_type: "auto",
+    resource_type: "raw",
   });
 };
 
@@ -77,13 +77,13 @@ const deleteResume = async (req, res) => {
     }
 
     await cloudinary.uploader.destroy(resume.publicId, {
-      resource_type: "auto",
+      resource_type: "raw",
     });
-    await resume.remove();
+    await resume.deleteOne();
 
     res.status(200).json({ message: "Resume deleted successfully" });
   } catch (error) {
-    console.error(error); 
+    console.error(error);
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -113,7 +113,7 @@ const updateResume = async (req, res) => {
     const analysis = await analyzeResumeWithAI(text);
 
     await cloudinary.uploader.destroy(resume.publicId, {
-      resource_type: "auto",
+      resource_type: "raw",
     });
 
     resume.fileUrl = uploadedFile.secure_url;
