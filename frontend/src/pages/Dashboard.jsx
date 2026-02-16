@@ -73,6 +73,26 @@ export default function Dashboard() {
     }
   };
 
+  const deleteResume = async (resumeId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/resume/my/${resumeId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to delete resume");
+      }
+
+      setHistory((prev) => prev.filter((resume) => resume._id !== resumeId));
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   const parseAiAnalysis = (text) => {
     if (!text) {
       return { score: "", skills: "", improvements: "" };
@@ -127,7 +147,8 @@ export default function Dashboard() {
                   {resume.createdAt
                     ? new Date(resume.createdAt).toLocaleDateString()
                     : "Unknown date"}
-                </span>
+                </span>{" "}
+                <button onClick={() => deleteResume(resume._id)}>Delete</button>
               </li>
             ))}
           </ul>
