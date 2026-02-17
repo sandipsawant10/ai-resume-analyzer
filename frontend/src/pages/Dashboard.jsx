@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   CheckCircle2,
   Crown,
+  Eye,
   FileText,
   History,
   LayoutDashboard,
   LogOut,
   Menu,
+  RefreshCw,
   Sparkles,
   Trash2,
   UploadCloud,
@@ -24,8 +26,10 @@ export default function Dashboard() {
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("dashboard");
+  const historyRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -92,6 +96,10 @@ export default function Dashboard() {
     }
   };
 
+  const scrollToHistory = () => {
+    historyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   useEffect(() => {
     resumeHistory();
   }, []);
@@ -119,6 +127,57 @@ export default function Dashboard() {
       setHistory((prev) => prev.filter((resume) => resume._id !== resumeId));
     } catch (error) {
       setError(error.message);
+    }
+  };
+
+  const viewResumeAnalysis = (resume) => {
+    setError(null);
+    setResult({
+      message: "Loaded from history",
+      aiAnalysis: resume.analysis,
+      resume,
+    });
+  };
+
+  const updateResume = async (resumeId, updatedFile) => {
+    try {
+      if (!updatedFile) {
+        setError("Please select a file to update.");
+        return;
+      }
+
+      setUpdatingId(resumeId);
+      setError(null);
+
+      const formData = new FormData();
+      formData.append("resume", updatedFile);
+
+      const res = await fetch(`http://localhost:5000/resume/my/${resumeId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to update resume");
+      }
+
+      const data = await res.json();
+      setResult(data);
+      if (data?.resume) {
+        setHistory((prev) =>
+          prev.map((resume) =>
+            resume._id === resumeId ? data.resume : resume,
+          ),
+        );
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -392,6 +451,8 @@ export default function Dashboard() {
               onClick={() => {
                 setActiveNav("history");
                 resumeHistory();
+                scrollToHistory();
+                setSidebarOpen(false);
               }}
               className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
                 activeNav === "history"
@@ -658,7 +719,10 @@ export default function Dashboard() {
               )}
             </section>
 
-            <section className="grid gap-6 lg:grid-cols-[1.6fr_0.6fr]">
+            <section
+              ref={historyRef}
+              className="grid gap-6 lg:grid-cols-[1.6fr_0.6fr]"
+            >
               <Card className="p-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-medium">Resume History</h3>
@@ -690,15 +754,42 @@ export default function Dashboard() {
                             </p>
                           </div>
                         </div>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => deleteResume(resume._id)}
-                          className="border-rose-500/30 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20"
-                        >
-                          <Trash2 size={14} />
-                          Delete
-                        </Button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => viewResumeAnalysis(resume)}
+                            className="border-indigo-500/30 bg-indigo-500/10 text-indigo-100 hover:bg-indigo-500/20"
+                          >
+                            <Eye size={14} />
+                            View
+                          </Button>
+                          <input
+                            id={`update-${resume._id}`}
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            className="hidden"
+                            onChange={(event) =>
+                              updateResume(resume._id, event.target.files?.[0])
+                            }
+                          />
+                          <label
+                            htmlFor={`update-${resume._id}`}
+                            className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-700/70 bg-slate-900/60 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-all duration-300 hover:scale-[1.02] hover:bg-slate-800"
+                          >
+                            <RefreshCw size={14} />
+                            {updatingId === resume._id ? "Updating" : "Update"}
+                          </label>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => deleteResume(resume._id)}
+                            className="border-rose-500/30 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </Button>
+                        </div>
                       </div>
                     ))
                   ) : (
