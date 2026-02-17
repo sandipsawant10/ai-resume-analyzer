@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeNav, setActiveNav] = useState("dashboard");
   const historyRef = useRef(null);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   const navigate = useNavigate();
 
@@ -53,7 +54,7 @@ export default function Dashboard() {
 
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/resume/upload", {
+      const res = await fetch(`${API_URL}/resume/upload`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
@@ -78,7 +79,7 @@ export default function Dashboard() {
 
   const resumeHistory = async () => {
     try {
-      const res = await fetch("http://localhost:5000/resume/my", {
+      const res = await fetch(`${API_URL}/resume/my`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -112,7 +113,7 @@ export default function Dashboard() {
 
   const deleteResume = async (resumeId) => {
     try {
-      const res = await fetch(`http://localhost:5000/resume/my/${resumeId}`, {
+      const res = await fetch(`${API_URL}/resume/my/${resumeId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -152,7 +153,7 @@ export default function Dashboard() {
       const formData = new FormData();
       formData.append("resume", updatedFile);
 
-      const res = await fetch(`http://localhost:5000/resume/my/${resumeId}`, {
+      const res = await fetch(`${API_URL}/resume/my/${resumeId}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
