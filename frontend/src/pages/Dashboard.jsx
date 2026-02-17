@@ -374,6 +374,10 @@ export default function Dashboard() {
         atob(payload.replace(/-/g, "+").replace(/_/g, "/")),
       );
       const email = decoded?.email || "";
+      const rawName = decoded?.name ? String(decoded.name).trim() : "";
+      if (rawName) {
+        return { email, name: rawName };
+      }
       const nameSeed = email.split("@")[0] || "User";
       const name = nameSeed
         .split(/[._-]+/)

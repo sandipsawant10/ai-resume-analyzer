@@ -6,10 +6,14 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const registerUser = async (req, res) => {
-  const { email, password, confirmPassword } = req.body;
+  const { name, email, password, confirmPassword } = req.body;
 
-  if (!email || !password || !confirmPassword) {
+  if (!name || !email || !password || !confirmPassword) {
     return res.status(400).json({ message: "All fields are required" });
+  }
+
+  if (!String(name).trim()) {
+    return res.status(400).json({ message: "Name is required" });
   }
 
   if (password !== confirmPassword) {
@@ -33,12 +37,13 @@ const registerUser = async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await new User({
+      name: String(name).trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
     }).save();
     return res.status(201).json({
       message: "user registered successfully",
-      user: { email: user.email },
+      user: { name: user.name, email: user.email },
     });
   } catch (error) {
     return res.status(500).json({ message: "Server error" });
@@ -65,13 +70,14 @@ const loginUser = async (req, res) => {
   }
 
   const token = jwt.sign(
-    { userId: user._id, email: user.email },
+    { userId: user._id, email: user.email, name: user.name },
     process.env.JWT_SECRET,
     { expiresIn: "1d" },
   );
   return res.status(200).json({
     message: "Login successful",
     token: token,
+    user: { name: user.name, email: user.email },
   });
 };
 

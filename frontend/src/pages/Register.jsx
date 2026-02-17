@@ -47,7 +47,12 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (email === "" || password === "" || confirmPassword === "") {
+    if (
+      name === "" ||
+      email === "" ||
+      password === "" ||
+      confirmPassword === ""
+    ) {
       setError("All fields are required");
       return;
     }
@@ -58,7 +63,7 @@ export default function Register() {
     }
 
     try {
-      const res = await registerUser(email, password, confirmPassword);
+      const res = await registerUser(name, email, password, confirmPassword);
       navigate("/login");
     } catch (error) {
       setError(error.message);
