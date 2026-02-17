@@ -26,7 +26,7 @@ export default function Login() {
         if (!res.token) {
           throw new Error("Login failed. Please check your credentials.");
         }
-        navigate("/");
+        navigate("/dashboard");
       } catch (error) {
         setError(
           "Login failed. Please check your credentials. " + error.message,
